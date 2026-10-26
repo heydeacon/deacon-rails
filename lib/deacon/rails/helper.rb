@@ -28,6 +28,7 @@ module Deacon
 
         attributes = { "data-key" => key }
         attributes["data-context"] = JSON.generate(context) unless context.nil?
+        attributes["data-no-page-views"] = true if ::Rails.application.config.deacon.page_views == false
 
         deacon_loader_tag(attributes)
       end
@@ -47,9 +48,12 @@ module Deacon
         value.is_a?(String) || value.is_a?(Integer) || value.is_a?(Float) || value == true || value == false
       end
 
-      # The tag Install gives, with any of its other attributes between the key and async.
+      # The tag Install gives, with any of its other attributes between the key and async. An
+      # attribute that is true is written with no value, as async is.
       def deacon_loader_tag(attributes)
-        rendered = attributes.map { |name, value| %( #{name}="#{ERB::Util.html_escape(value)}") }.join
+        rendered = attributes.map do |name, value|
+          value == true ? " #{name}" : %( #{name}="#{ERB::Util.html_escape(value)}")
+        end.join
 
         %(<script src="#{LOADER_SRC}"#{rendered} async></script>).html_safe
       end

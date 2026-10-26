@@ -75,6 +75,17 @@ class WidgetTagTest < DeaconTest
     assert_equal '{"note":"</script><b>\"hi\" &amp;</b>"}', script["data-context"]
   end
 
+  test "holds back page views with the data-no-page-views attribute" do
+    Rails.application.config.deacon.key = "pk_test123"
+    Rails.application.config.deacon.page_views = false
+
+    assert_equal(
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" ' \
+      "data-no-page-views async></script>",
+      rendered_tag
+    )
+  end
+
   {
     "a string" => "plan=pro",
     "an array" => ["docs"],
