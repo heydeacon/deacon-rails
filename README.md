@@ -40,6 +40,8 @@ Deacon only runs on the sites listed on Install. A listed domain covers its subd
 
 When you run `bin/rails server`, Install notices the widget on `localhost:3000` and lets you add it in one click. Chats on localhost don't count towards your plan.
 
+If you tell Deacon who is signed in, with the `window.deaconUser` script from [Deacon's install guide](https://heydeacon.com/agent/install.md), put that script above `<%= deacon_widget_tag %>` in the head, because the widget reads it as it starts.
+
 ## Options
 
 Set them on `config.deacon`, in an initializer or in `config/application.rb`.
@@ -62,12 +64,12 @@ Turbo Drive swaps the `<body>` on each visit and keeps the `<head>`, so in the h
 
 ## Content Security Policy
 
-If your app gives each request a nonce, with `config.content_security_policy_nonce_generator`, the tag carries it, so `script-src` doesn't need Deacon's address. The chat still needs `https://heydeacon.com` in `connect-src` and `frame-src`, and `'unsafe-inline'` in `style-src`, because the widget writes its styles where a nonce can't reach. Keep the nonce to `script-src`, since a nonce in `style-src` makes browsers ignore `'unsafe-inline'`:
+If your app gives each request a nonce, with `config.content_security_policy_nonce_generator`, the tag carries it. The policy also needs Deacon's address, `https://heydeacon.com`, in `script-src`, `connect-src` and `frame-src`, and `'unsafe-inline'` in `style-src`, because the widget writes its styles where a nonce can't reach. Keep the nonce to `script-src`, since a nonce in `style-src` makes browsers ignore `'unsafe-inline'`:
 
 ```ruby
 Rails.application.configure do
   config.content_security_policy do |policy|
-    policy.script_src  :self
+    policy.script_src  :self, "https://heydeacon.com"
     policy.style_src   :self, :unsafe_inline
     policy.connect_src :self, "https://heydeacon.com"
     policy.frame_src   "https://heydeacon.com"
