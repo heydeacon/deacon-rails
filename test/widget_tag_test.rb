@@ -29,6 +29,22 @@ class WidgetTagTest < DeaconTest
     )
   end
 
+  MISSING_KEY = "deacon-rails: the key is missing, so the page has no Deacon widget. Set " \
+                "DEACON_KEY or config.deacon.key. In Deacon, open Install (the button at the top " \
+                "of the dashboard) and copy the data-key value from the snippet. It starts with pk_."
+
+  {
+    "unset" => nil,
+    "empty, as from an empty DEACON_KEY" => "",
+    "blank" => "   "
+  }.each do |description, key|
+    test "prints nothing and logs a warning when the key is #{description}" do
+      ENV["DEACON_KEY"] = key
+
+      assert_equal ["", ["#{MISSING_KEY}\n"]], [rendered_tag, logged.lines.grep(/deacon-rails/)]
+    end
+  end
+
   test "trims spaces pasted around the key" do
     Rails.application.config.deacon.key = "  pk_test123\n"
 
