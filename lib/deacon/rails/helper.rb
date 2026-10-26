@@ -16,15 +16,15 @@ module Deacon
       # the app sets none. With no key it prints nothing and logs a warning, so a missing
       # setting never takes a page down.
       def deacon_widget_tag
-        key = (::Rails.application.config.deacon.key || ENV["DEACON_KEY"]).to_s.strip
+        key = (deacon_config.key || ENV["DEACON_KEY"]).to_s.strip
 
         if key.empty?
           ::Rails.logger&.warn(MISSING_KEY)
           return
         end
 
-        context = ::Rails.application.config.deacon.context
-        page_views = ::Rails.application.config.deacon.page_views
+        context = deacon_config.context
+        page_views = deacon_config.page_views
         deacon_check_context(context)
         deacon_check_page_views(page_views)
 
@@ -36,6 +36,10 @@ module Deacon
       end
 
       private
+
+      def deacon_config
+        ::Rails.application.config.deacon
+      end
 
       # The request's Content Security Policy nonce, when the app has a nonce generator and the
       # page was rendered for a request.
