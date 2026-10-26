@@ -86,6 +86,18 @@ class WidgetTagTest < DeaconTest
     )
   end
 
+  test "refuses a page_views that isn't true or false" do
+    Rails.application.config.deacon.key = "pk_test123"
+    Rails.application.config.deacon.page_views = "false"
+
+    error = assert_raises(ActionView::Template::Error) { get "/" }
+
+    assert_equal(
+      [ArgumentError, "deacon-rails: config.deacon.page_views must be true or false."],
+      [error.cause.class, error.cause.message]
+    )
+  end
+
   {
     "a string" => "plan=pro",
     "an array" => ["docs"],

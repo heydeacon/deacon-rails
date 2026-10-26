@@ -24,11 +24,13 @@ module Deacon
         end
 
         context = ::Rails.application.config.deacon.context
+        page_views = ::Rails.application.config.deacon.page_views
         deacon_check_context(context)
+        deacon_check_page_views(page_views)
 
         attributes = { "data-key" => key }
         attributes["data-context"] = JSON.generate(context) unless context.nil?
-        attributes["data-no-page-views"] = true if ::Rails.application.config.deacon.page_views == false
+        attributes["data-no-page-views"] = true if page_views == false
 
         deacon_loader_tag(attributes)
       end
@@ -42,6 +44,12 @@ module Deacon
 
         raise ArgumentError, "deacon-rails: config.deacon.context must be a hash whose values " \
                              "are strings, numbers or booleans."
+      end
+
+      def deacon_check_page_views(page_views)
+        return if page_views.nil? || page_views == true || page_views == false
+
+        raise ArgumentError, "deacon-rails: config.deacon.page_views must be true or false."
       end
 
       def deacon_scalar?(value)
