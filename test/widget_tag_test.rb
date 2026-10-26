@@ -65,4 +65,13 @@ class WidgetTagTest < DeaconTest
       rendered_tag
     )
   end
+
+  test "keeps a context value that looks like HTML as it was written" do
+    Rails.application.config.deacon.key = "pk_test123"
+    Rails.application.config.deacon.context = { note: '</script><b>"hi" &amp;</b>' }
+
+    script = Nokogiri::HTML5.fragment(rendered_tag).at_css("script")
+
+    assert_equal '{"note":"</script><b>\"hi\" &amp;</b>"}', script["data-context"]
+  end
 end
