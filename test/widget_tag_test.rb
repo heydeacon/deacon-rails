@@ -86,6 +86,16 @@ class WidgetTagTest < DeaconTest
     )
   end
 
+  test "carries the Content Security Policy nonce when the app gives each request one" do
+    Rails.application.config.deacon.key = "pk_test123"
+
+    assert_equal(
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async ' \
+      'nonce="n0nce"></script>',
+      rendered_tag("/with-nonce")
+    )
+  end
+
   test "refuses a page_views that isn't true or false" do
     Rails.application.config.deacon.key = "pk_test123"
     Rails.application.config.deacon.page_views = "false"

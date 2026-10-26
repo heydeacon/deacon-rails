@@ -32,10 +32,16 @@ module Deacon
         attributes["data-context"] = JSON.generate(context) unless context.nil?
         attributes["data-no-page-views"] = true if page_views == false
 
-        deacon_loader_tag(attributes)
+        deacon_loader_tag(attributes, deacon_csp_nonce)
       end
 
       private
+
+      # The request's Content Security Policy nonce, when the app has a nonce generator and the
+      # page was rendered for a request.
+      def deacon_csp_nonce
+        content_security_policy_nonce if respond_to?(:content_security_policy_nonce)
+      end
 
       # A wrong type is a mistake in the app's code, so it raises, as any view error does.
       def deacon_check_context(context)
@@ -56,14 +62,16 @@ module Deacon
         value.is_a?(String) || value.is_a?(Integer) || value.is_a?(Float) || value == true || value == false
       end
 
-      # The tag Install gives, with any of its other attributes between the key and async. An
-      # attribute that is true is written with no value, as async is.
-      def deacon_loader_tag(attributes)
+      # The tag Install gives, with any of its other attributes between the key and async, and
+      # the nonce after them. An attribute that is true is written with no value, as async is.
+      def deacon_loader_tag(attributes, nonce)
         rendered = attributes.map do |name, value|
           value == true ? " #{name}" : %( #{name}="#{ERB::Util.html_escape(value)}")
         end.join
 
-        %(<script src="#{LOADER_SRC}"#{rendered} async></script>).html_safe
+        nonce_attribute = nonce.nil? ? "" : %( nonce="#{ERB::Util.html_escape(nonce)}")
+
+        %(<script src="#{LOADER_SRC}"#{rendered} async#{nonce_attribute}></script>).html_safe
       end
     end
   end
