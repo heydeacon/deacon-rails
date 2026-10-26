@@ -28,4 +28,13 @@ class WidgetTagTest < DeaconTest
       rendered_tag
     )
   end
+
+  test "trims spaces pasted around the key" do
+    Rails.application.config.deacon.key = "  pk_test123\n"
+
+    assert_equal(
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
+      rendered_tag
+    )
+  end
 end

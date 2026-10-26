@@ -9,7 +9,7 @@ module Deacon
       # The tag Install gives, with the key from config.deacon.key, or from DEACON_KEY when
       # the app sets none.
       def deacon_widget_tag
-        key = ::Rails.application.config.deacon.key || ENV["DEACON_KEY"]
+        key = (::Rails.application.config.deacon.key || ENV["DEACON_KEY"]).to_s.strip
 
         %(<script src="#{LOADER_SRC}" data-key="#{ERB::Util.html_escape(key)}" async></script>).html_safe
       end
