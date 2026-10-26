@@ -53,4 +53,16 @@ class WidgetTagTest < DeaconTest
       rendered_tag
     )
   end
+
+  test "passes config.deacon.context to Deacon as the data-context attribute" do
+    Rails.application.config.deacon.key = "pk_test123"
+    Rails.application.config.deacon.context = { site: "docs", version: "3.2", beta: true }
+
+    assert_equal(
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" ' \
+      'data-context="{&quot;site&quot;:&quot;docs&quot;,&quot;version&quot;:&quot;3.2&quot;,' \
+      '&quot;beta&quot;:true}" async></script>',
+      rendered_tag
+    )
+  end
 end

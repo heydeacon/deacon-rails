@@ -1,4 +1,5 @@
 require "erb"
+require "json"
 
 module Deacon
   module Rails
@@ -22,7 +23,20 @@ module Deacon
           return
         end
 
-        %(<script src="#{LOADER_SRC}" data-key="#{ERB::Util.html_escape(key)}" async></script>).html_safe
+        context = ::Rails.application.config.deacon.context
+        attributes = { "data-key" => key }
+        attributes["data-context"] = JSON.generate(context) unless context.nil?
+
+        deacon_loader_tag(attributes)
+      end
+
+      private
+
+      # The tag Install gives, with any of its other attributes between the key and async.
+      def deacon_loader_tag(attributes)
+        rendered = attributes.map { |name, value| %( #{name}="#{ERB::Util.html_escape(value)}") }.join
+
+        %(<script src="#{LOADER_SRC}"#{rendered} async></script>).html_safe
       end
     end
   end
