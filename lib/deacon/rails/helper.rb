@@ -24,6 +24,8 @@ module Deacon
         end
 
         context = ::Rails.application.config.deacon.context
+        deacon_check_context(context)
+
         attributes = { "data-key" => key }
         attributes["data-context"] = JSON.generate(context) unless context.nil?
 
@@ -31,6 +33,19 @@ module Deacon
       end
 
       private
+
+      # A wrong type is a mistake in the app's code, so it raises, as any view error does.
+      def deacon_check_context(context)
+        return if context.nil?
+        return if context.is_a?(Hash) && context.each_value.all? { |value| deacon_scalar?(value) }
+
+        raise ArgumentError, "deacon-rails: config.deacon.context must be a hash whose values " \
+                             "are strings, numbers or booleans."
+      end
+
+      def deacon_scalar?(value)
+        value.is_a?(String) || value.is_a?(Integer) || value.is_a?(Float) || value == true || value == false
+      end
 
       # The tag Install gives, with any of its other attributes between the key and async.
       def deacon_loader_tag(attributes)

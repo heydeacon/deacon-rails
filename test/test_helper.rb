@@ -12,6 +12,7 @@ class DummyApp < Rails::Application
   config.logger = ActiveSupport::Logger.new(nil)
   config.secret_key_base = "test" * 16
   config.hosts.clear
+  config.action_dispatch.show_exceptions = :none
 
   routes.append do
     get "/" => "pages#show"

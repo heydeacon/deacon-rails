@@ -74,4 +74,27 @@ class WidgetTagTest < DeaconTest
 
     assert_equal '{"note":"</script><b>\"hi\" &amp;</b>"}', script["data-context"]
   end
+
+  {
+    "a string" => "plan=pro",
+    "an array" => ["docs"],
+    "a hash with a nested value" => { plan: { tier: "pro" } },
+    "a hash with a nil value" => { plan: nil }
+  }.each do |description, context|
+    test "refuses a context that is #{description}" do
+      Rails.application.config.deacon.key = "pk_test123"
+      Rails.application.config.deacon.context = context
+
+      error = assert_raises(ActionView::Template::Error) { get "/" }
+
+      assert_equal(
+        [
+          ArgumentError,
+          "deacon-rails: config.deacon.context must be a hash whose values are strings, " \
+          "numbers or booleans."
+        ],
+        [error.cause.class, error.cause.message]
+      )
+    end
+  end
 end
