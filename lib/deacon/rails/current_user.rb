@@ -25,14 +25,18 @@ module Deacon
         details(user) if user
       end
 
-      # Rails 8's built-in authentication names the address email_address.
+      # Rails 8's built-in authentication names the address email_address. A user with no id,
+      # such as a guest object or one never saved, names nobody, so it counts as nobody.
       def self.details(user)
+        id = user.id.to_s
+        return if id.empty?
+
         email = if user.respond_to?(:email) then user.email
                 elsif user.respond_to?(:email_address) then user.email_address
                 end
         name = user.name if user.respond_to?(:name)
 
-        Details.new(user.id.to_s, email.to_s.presence, name.to_s.presence)
+        Details.new(id, email.to_s.presence, name.to_s.presence)
       end
       private_class_method :details
     end

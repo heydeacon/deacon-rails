@@ -13,7 +13,9 @@ class SignedInTest < DeaconTest
       'window.deaconUser = { id: "7", email: "ana@studio.com", name: "Ana Ruiz", ' \
       'token: (nonce) => fetch("/deacon/token", { method: "POST", credentials: "same-origin", ' \
       'headers: { "Content-Type": "application/json", "X-CSRF-Token": "CSRF" }, ' \
-      'body: JSON.stringify({ nonce }) }).then((r) => (r.status === 200 ? r.text() : "")) }; ' \
+      'body: JSON.stringify({ nonce }) }).then((r) => { if (r.status === 204) return ""; ' \
+      'if (!r.ok) throw new Error("Deacon token route answered " + r.status); ' \
+      "return r.text(); }) }; " \
       "window.Deacon?.identify(window.deaconUser);</script>" \
       '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
       without_per_render_values(rendered_tag("/account"))

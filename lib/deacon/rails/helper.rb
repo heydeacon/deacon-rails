@@ -63,7 +63,8 @@ module Deacon
       end
 
       # The user's id, email and name, and the token function: written as code rather than
-      # JSON, since a function has no JSON.
+      # JSON, since a function has no JSON. A 204 is nobody signed in. Any other failure throws,
+      # so Deacon can tell the founder the route is broken instead of taking it for a sign-out.
       def deacon_user_object(user)
         headers = { "Content-Type" => "application/json" }
         headers["X-CSRF-Token"] = form_authenticity_token if protect_against_forgery?
@@ -72,7 +73,9 @@ module Deacon
         token = "(nonce) => fetch(#{deacon_js(path)}, { method: \"POST\", " \
                 "credentials: \"same-origin\", headers: #{deacon_js_object(headers)}, " \
                 "body: JSON.stringify({ nonce }) })" \
-                '.then((r) => (r.status === 200 ? r.text() : ""))'
+                '.then((r) => { if (r.status === 204) return ""; ' \
+                'if (!r.ok) throw new Error("Deacon token route answered " + r.status); ' \
+                "return r.text(); })"
 
         fields = { id: user.id, email: user.email, name: user.name }.compact
         fields = fields.map { |name, value| "#{name}: #{deacon_js(value)}" }

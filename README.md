@@ -53,7 +53,7 @@ To make one, open Install in Deacon and use Make a secret under Verify who's sig
 With the secret set, the gem does the rest:
 
 - Above the widget's tag it prints `window.deaconUser`, with the user's id, email and name and a `token` function.
-- When the chat opens, `token` posts to `/deacon/token`, a route the gem adds to your app. It answers with a token signed with `DEACON_SECRET` that names the user and this chat and lasts 10 minutes. With nobody signed in, or no secret, it answers 204 and signs nothing. Its answers are never cached and carry no CORS headers, so only your own pages can read them.
+- When the chat opens, `token` posts to `/deacon/token`, a route the gem adds to your app. It answers with a token signed with `DEACON_SECRET` that names the user and this chat and lasts 10 minutes. With nobody signed in, or no secret, it answers 204 and signs nothing. Any other failure, such as a 404 or a 500, makes `token` throw, so Deacon can tell you the route is broken rather than take it for a sign-out. Its answers are never cached and carry no CORS headers, so only your own pages can read them.
 - On a page where nobody is signed in, it prints `window.deaconUser = null` and `Deacon.identify(null)` instead, so signing out ends what Deacon knew about the last person, and the next person on that computer starts fresh.
 
 If your layout sets `window.deaconUser` itself, from an earlier version of Deacon's install guide, take that script out: the tag prints it now.
@@ -160,7 +160,11 @@ It loads in the background without holding up the page. Above it, when someone i
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": "…" },
       body: JSON.stringify({ nonce }),
-    }).then((r) => (r.status === 200 ? r.text() : "")),
+    }).then((r) => {
+      if (r.status === 204) return "";
+      if (!r.ok) throw new Error("Deacon token route answered " + r.status);
+      return r.text();
+    }),
   };
   window.Deacon?.identify(window.deaconUser);
 </script>

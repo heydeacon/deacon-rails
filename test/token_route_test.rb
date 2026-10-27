@@ -64,6 +64,16 @@ class TokenRouteTest < DeaconTest
     end
   end
 
+  test "answers 204 with no token when the user it finds has no id" do
+    cookies[:user] = "ana"
+    csrf = csrf_token_in(rendered_tag("/account"))
+    Rails.application.config.deacon.current_user = -> { User.new(nil, "guest@studio.com", "Guest") }
+
+    post_token(csrf)
+
+    assert_equal [204, ""], [response.status, response.body]
+  end
+
   test "answers 204 with no token when nobody is signed in" do
     cookies[:user] = "ana"
     csrf = csrf_token_in(rendered_tag("/account"))
