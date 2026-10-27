@@ -32,10 +32,46 @@ module Deacon
         attributes["data-context"] = JSON.generate(context) unless context.nil?
         attributes["data-no-page-views"] = true if page_views == false
 
-        deacon_loader_tag(attributes, deacon_csp_nonce)
+        nonce = deacon_csp_nonce
+        "#{deacon_signed_in_script(nonce)}#{deacon_loader_tag(attributes, nonce)}".html_safe
       end
 
       private
+
+      # Who is signed in, for the loader to read as it starts, so it goes above the loader tag.
+      # The token function asks the app's own POST /deacon/token to sign them when the chat
+      # opens, sending the CSRF token as every other POST in the app does.
+      def deacon_signed_in_script(nonce)
+        user = CurrentUser.find(controller)
+        return unless user.is_a?(CurrentUser::Details)
+
+        fields = { id: user.id, email: user.email, name: user.name }.compact
+        headers = { "Content-Type" => "application/json" }
+        headers["X-CSRF-Token"] = form_authenticity_token if protect_against_forgery?
+
+        token = "(nonce) => fetch(#{deacon_js(::Rails.application.routes.url_helpers.deacon_token_path)}, " \
+                '{ method: "POST", credentials: "same-origin", ' \
+                "headers: #{deacon_js_object(headers)}, body: JSON.stringify({ nonce }) })" \
+                '.then((r) => (r.status === 200 ? r.text() : ""))'
+        user_object = (fields.map { |name, value| "#{name}: #{deacon_js(value)}" } << "token: #{token}").join(", ")
+
+        deacon_script("window.deaconUser = { #{user_object} }; window.Deacon?.identify(window.deaconUser);", nonce)
+      end
+
+      # A string as JavaScript, escaped so nothing in it can end the script it sits in.
+      def deacon_js(value)
+        ERB::Util.json_escape(JSON.generate(value.to_s))
+      end
+
+      def deacon_js_object(hash)
+        "{ #{hash.map { |name, value| "#{deacon_js(name)}: #{deacon_js(value)}" }.join(', ')} }"
+      end
+
+      def deacon_script(code, nonce)
+        nonce_attribute = nonce.nil? ? "" : %( nonce="#{ERB::Util.html_escape(nonce)}")
+
+        "<script#{nonce_attribute}>#{code}</script>"
+      end
 
       def deacon_config
         ::Rails.application.config.deacon

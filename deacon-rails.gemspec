@@ -19,9 +19,10 @@ Gem::Specification.new do |spec|
     "rubygems_mfa_required" => "true"
   }
 
-  spec.files = Dir["lib/**/*.rb", "README.md", "LICENSE"]
+  spec.files = Dir["app/**/*.rb", "lib/**/*.rb", "README.md", "LICENSE"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "actionview", ">= 8.0"
+  spec.add_dependency "jwt", ">= 2.8", "< 4"
   spec.add_dependency "railties", ">= 8.0"
 end

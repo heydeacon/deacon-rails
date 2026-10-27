@@ -3,9 +3,10 @@ ENV["RAILS_ENV"] = "test"
 require "rails"
 require "action_controller/railtie"
 require "deacon/rails"
+require "jwt"
 
-# The smallest Rails app that renders a layout: the gem's own Railtie adds config.deacon and
-# the helper, as it does in a founder's app.
+# The smallest Rails app that renders a layout: the gem's own engine adds config.deacon,
+# the helper and the token route, as it does in a founder's app.
 class DummyApp < Rails::Application
   config.root = __dir__
   config.eager_load = false
@@ -17,12 +18,38 @@ class DummyApp < Rails::Application
   routes.append do
     get "/" => "pages#show"
     get "/with-nonce" => "nonce_pages#show"
+    get "/account" => "account_pages#show"
   end
 end
 
 DummyApp.initialize!
 
+# A page in an app with no way to say who is signed in.
 class PagesController < ActionController::Base
+  def show
+    render inline: "<%= deacon_widget_tag %>"
+  end
+end
+
+# Someone the dummy app can sign in, in Devise's shape: an id, an email and a name.
+User = Struct.new(:id, :email, :name)
+
+# The dummy app's own controller, which signs in whoever the user cookie names, as a Devise
+# app's current_user does, and checks the CSRF token on every POST, as a new Rails app does.
+class ApplicationController < ActionController::Base
+  USERS = { "ana" => User.new(7, "ana@studio.com", "Ana Ruiz") }.freeze
+
+  protect_from_forgery with: :exception
+
+  private
+
+  def current_user
+    USERS[cookies[:user]]
+  end
+end
+
+# A page in the app that has someone signed in, or nobody.
+class AccountPagesController < ApplicationController
   def show
     render inline: "<%= deacon_widget_tag %>"
   end
@@ -40,15 +67,18 @@ class DeaconTest < ActionDispatch::IntegrationTest
   setup do
     @saved_config = Rails.application.config.deacon.to_h
     @saved_env_key = ENV["DEACON_KEY"]
+    @saved_env_secret = ENV["DEACON_SECRET"]
     @saved_logger = Rails.logger
     @log = StringIO.new
     Rails.logger = ActiveSupport::Logger.new(@log)
     ENV.delete("DEACON_KEY")
+    ENV.delete("DEACON_SECRET")
   end
 
   teardown do
     @saved_config.each { |name, value| Rails.application.config.deacon[name] = value }
     ENV["DEACON_KEY"] = @saved_env_key
+    ENV["DEACON_SECRET"] = @saved_env_secret
     Rails.logger = @saved_logger
   end
 
@@ -61,5 +91,16 @@ class DeaconTest < ActionDispatch::IntegrationTest
 
   def logged
     @log.string
+  end
+
+  # The CSRF token the signed-in script sends, which Rails masks afresh on every render.
+  def csrf_token_in(html)
+    html[/"X-CSRF-Token": "([^"]+)"/, 1]
+  end
+
+  # The page with its CSRF token swapped for CSRF, so the rest can be compared exactly.
+  def without_csrf_token(html)
+    token = csrf_token_in(html)
+    token.nil? ? html : html.sub(token, "CSRF")
   end
 end
