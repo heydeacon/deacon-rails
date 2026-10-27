@@ -93,4 +93,12 @@ class TokenRouteTest < DeaconTest
       assert_equal %w[no-store private], response.headers["Cache-Control"].split(", ").sort
     end
   end
+
+  test "sends no CORS headers, so only the app's own pages can read a token" do
+    cookies[:user] = "ana"
+
+    ask_for_token
+
+    assert_equal [200, []], [response.status, response.headers.keys.grep(/\Aaccess-control-/i)]
+  end
 end
