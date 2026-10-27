@@ -102,6 +102,21 @@ class TokenRouteTest < DeaconTest
     assert_equal [200, []], [response.status, response.headers.keys.grep(/\Aaccess-control-/i)]
   end
 
+  {
+    "missing" => {},
+    "not a string" => { nonce: 42 },
+    "longer than 128 characters" => { nonce: "a" * 129 },
+    "more than letters, digits, - and _" => { nonce: "abc def" }
+  }.each do |description, body|
+    test "answers 400 with no token when the nonce is #{description}" do
+      cookies[:user] = "ana"
+
+      ask_for_token(body: JSON.generate(body))
+
+      assert_equal [400, ""], [response.status, response.body]
+    end
+  end
+
   test "refuses a request without the page's CSRF token, as the app refuses any POST" do
     cookies[:user] = "ana"
     rendered_tag("/account")

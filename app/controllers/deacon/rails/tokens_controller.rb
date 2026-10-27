@@ -10,6 +10,10 @@ module Deacon
       # How long a token lasts. Deacon refuses one that lasts more than 15 minutes.
       LIFETIME = 10 * 60
 
+      # The widget session's nonce, which the token carries so it proves who is signed in to that
+      # session and no other. Deacon's are hex; anything far from that isn't one.
+      NONCE = /\A[A-Za-z0-9_-]{1,128}\z/
+
       MISSING_SECRET = "deacon-rails: DEACON_SECRET is missing, so the token route signs nobody " \
                        "and Deacon can't verify who is signed in. In Deacon, open Install (the " \
                        "button at the top of the dashboard) and make a secret under Verify who's " \
@@ -18,6 +22,9 @@ module Deacon
       def create
         # A token names one person, so no cache in front of the app may keep it for another.
         response.headers["Cache-Control"] = "no-store, private"
+
+        nonce = request.request_parameters["nonce"]
+        return head(:bad_request) unless nonce.is_a?(String) && NONCE.match?(nonce)
 
         user = CurrentUser.find(self)
         return head(:no_content) unless user.is_a?(CurrentUser::Details)
@@ -30,7 +37,6 @@ module Deacon
           return head(:no_content)
         end
 
-        nonce = request.request_parameters["nonce"]
         now = Time.now.to_i
         claims = { sub: user.id, email: user.email, name: user.name, nonce: nonce, iat: now, exp: now + LIFETIME }
 
