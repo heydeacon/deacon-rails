@@ -19,6 +19,7 @@ class DummyApp < Rails::Application
     get "/" => "pages#show"
     get "/with-nonce" => "nonce_pages#show"
     get "/account" => "account_pages#show"
+    get "/account-with-nonce" => "nonce_account_pages#show"
   end
 end
 
@@ -92,6 +93,11 @@ end
 # A page whose app gives each request a Content Security Policy nonce, as an app does with
 # config.content_security_policy_nonce_generator.
 class NoncePagesController < PagesController
+  before_action { request.content_security_policy_nonce_generator = ->(_request) { "n0nce" } }
+end
+
+# The account page, in an app that gives each request a nonce.
+class NonceAccountPagesController < AccountPagesController
   before_action { request.content_security_policy_nonce_generator = ->(_request) { "n0nce" } }
 end
 

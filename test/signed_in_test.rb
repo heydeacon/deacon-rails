@@ -80,6 +80,15 @@ class SignedInTest < DeaconTest
     )
   end
 
+  test "carries the Content Security Policy nonce on the signed-in script too" do
+    assert_equal(
+      '<script nonce="n0nce">window.deaconUser = null; window.Deacon?.identify(null);</script>' \
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async ' \
+      'nonce="n0nce"></script>',
+      rendered_tag("/account-with-nonce")
+    )
+  end
+
   test "says nothing about who is signed in when the app has no current_user" do
     assert_equal(
       '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
