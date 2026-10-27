@@ -25,15 +25,19 @@ module Deacon
 
         context = deacon_config.context
         page_views = deacon_config.page_views
+        signed_in = deacon_config.signed_in
         deacon_check_context(context)
-        deacon_check_page_views(page_views)
+        deacon_check_boolean(:page_views, page_views)
+        deacon_check_boolean(:signed_in, signed_in)
 
         attributes = { "data-key" => key }
         attributes["data-context"] = JSON.generate(context) unless context.nil?
         attributes["data-no-page-views"] = true if page_views == false
 
         nonce = deacon_csp_nonce
-        "#{deacon_signed_in_script(nonce)}#{deacon_loader_tag(attributes, nonce)}".html_safe
+        script = signed_in == false ? nil : deacon_signed_in_script(nonce)
+
+        "#{script}#{deacon_loader_tag(attributes, nonce)}".html_safe
       end
 
       private
@@ -95,10 +99,10 @@ module Deacon
                              "are strings, numbers or booleans."
       end
 
-      def deacon_check_page_views(page_views)
-        return if page_views.nil? || page_views == true || page_views == false
+      def deacon_check_boolean(name, value)
+        return if value.nil? || value == true || value == false
 
-        raise ArgumentError, "deacon-rails: config.deacon.page_views must be true or false."
+        raise ArgumentError, "deacon-rails: config.deacon.#{name} must be true or false."
       end
 
       def deacon_scalar?(value)

@@ -2,7 +2,7 @@ module Deacon
   module Rails
     # What config.deacon holds. A Struct rather than ordered options, so a misspelt setting
     # fails loudly at boot instead of being ignored.
-    Configuration = Struct.new(:key, :context, :page_views)
+    Configuration = Struct.new(:key, :context, :page_views, :signed_in)
 
     # Adds config.deacon to the app, deacon_widget_tag to its views and POST /deacon/token to its
     # routes. An engine rather than a plain Railtie, so the app loads the token route's
