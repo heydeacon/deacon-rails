@@ -35,10 +35,10 @@ module Deacon
         attributes["data-context"] = JSON.generate(context) unless context.nil?
         attributes["data-no-page-views"] = true if page_views == false
 
-        nonce = deacon_csp_nonce
-        script = signed_in == false ? nil : deacon_signed_in_script(nonce)
+        csp_nonce = deacon_csp_nonce
+        script = signed_in == false ? nil : deacon_signed_in_script(csp_nonce)
 
-        "#{script}#{deacon_loader_tag(attributes, nonce)}".html_safe
+        "#{script}#{deacon_loader_tag(attributes, csp_nonce)}".html_safe
       end
 
       private
@@ -48,7 +48,7 @@ module Deacon
       # opens, sending the CSRF token as every other POST in the app does. With nobody signed
       # in it signs the visitor out, so a sign-out ends Deacon's proof of who they were. An app
       # with no way to say who is signed in gets neither.
-      def deacon_signed_in_script(nonce)
+      def deacon_signed_in_script(csp_nonce)
         user = CurrentUser.find(controller)
         return if user == :unknown
 
@@ -59,7 +59,7 @@ module Deacon
                    "window.Deacon?.identify(window.deaconUser);"
                end
 
-        deacon_script(code, nonce)
+        deacon_script(code, csp_nonce)
       end
 
       # The user's id, email and name, and the token function: written as code rather than
@@ -92,10 +92,14 @@ module Deacon
       # Turbo Drive keeps the head between visits and runs a script in the new page's head only
       # when none just like it is there, so each page's is made unlike the last one's. Otherwise a
       # sign-in or sign-out back to someone the head has seen before would never reach Deacon.
-      def deacon_script(code, nonce)
-        nonce_attribute = nonce.nil? ? "" : %( nonce="#{ERB::Util.html_escape(nonce)}")
+      def deacon_script(code, csp_nonce)
+        render = SecureRandom.hex(8)
 
-        %(<script data-deacon-render="#{SecureRandom.hex(8)}"#{nonce_attribute}>#{code}</script>)
+        %(<script data-deacon-render="#{render}"#{deacon_nonce_attribute(csp_nonce)}>#{code}</script>)
+      end
+
+      def deacon_nonce_attribute(csp_nonce)
+        csp_nonce.nil? ? "" : %( nonce="#{ERB::Util.html_escape(csp_nonce)}")
       end
 
       def deacon_config
@@ -129,14 +133,13 @@ module Deacon
 
       # The tag Install gives, with any of its other attributes between the key and async, and
       # the nonce after them. An attribute that is true is written with no value, as async is.
-      def deacon_loader_tag(attributes, nonce)
+      def deacon_loader_tag(attributes, csp_nonce)
         rendered = attributes.map do |name, value|
           value == true ? " #{name}" : %( #{name}="#{ERB::Util.html_escape(value)}")
         end.join
 
-        nonce_attribute = nonce.nil? ? "" : %( nonce="#{ERB::Util.html_escape(nonce)}")
-
-        %(<script src="#{LOADER_SRC}"#{rendered} async#{nonce_attribute}></script>).html_safe
+        %(<script src="#{LOADER_SRC}"#{rendered} async#{deacon_nonce_attribute(csp_nonce)}></script>)
+          .html_safe
       end
     end
   end

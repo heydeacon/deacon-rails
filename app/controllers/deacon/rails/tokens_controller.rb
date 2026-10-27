@@ -12,7 +12,7 @@ module Deacon
 
       # The widget session's nonce, which the token carries so it proves who is signed in to that
       # session and no other. Deacon's are hex; anything far from that isn't one.
-      NONCE = /\A[A-Za-z0-9_-]{1,128}\z/
+      NONCE_FORMAT = /\A[A-Za-z0-9_-]{1,128}\z/
 
       MISSING_SECRET = "deacon-rails: DEACON_SECRET is missing, so the token route signs nobody " \
                        "and Deacon can't verify who is signed in. In Deacon, open Install (the " \
@@ -28,7 +28,7 @@ module Deacon
         response.headers["Cache-Control"] = "no-store, private"
 
         nonce = request.request_parameters["nonce"]
-        return head(:bad_request) unless nonce.is_a?(String) && NONCE.match?(nonce)
+        return head(:bad_request) unless nonce.is_a?(String) && NONCE_FORMAT.match?(nonce)
 
         user = CurrentUser.find(self)
         return head(:no_content) unless user.is_a?(CurrentUser::Details)
