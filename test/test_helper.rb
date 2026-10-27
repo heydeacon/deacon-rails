@@ -141,9 +141,12 @@ class DeaconTest < ActionDispatch::IntegrationTest
     html[/"X-CSRF-Token": "([^"]+)"/, 1]
   end
 
-  # The page with its CSRF token swapped for CSRF, so the rest can be compared exactly.
-  def without_csrf_token(html)
+  # The page with what changes on every render, the CSRF token and the signed-in script's
+  # data-deacon-render, swapped for CSRF and RENDER, so the rest can be compared exactly.
+  def without_per_render_values(html)
     token = csrf_token_in(html)
-    token.nil? ? html : html.sub(token, "CSRF")
+    html = html.sub(token, "CSRF") unless token.nil?
+
+    html.sub(/data-deacon-render="\h{16}"/, 'data-deacon-render="RENDER"')
   end
 end

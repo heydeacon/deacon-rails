@@ -9,21 +9,22 @@ class SignedInTest < DeaconTest
     cookies[:user] = "ana"
 
     assert_equal(
-      '<script>window.deaconUser = { id: "7", email: "ana@studio.com", name: "Ana Ruiz", ' \
+      '<script data-deacon-render="RENDER">' \
+      'window.deaconUser = { id: "7", email: "ana@studio.com", name: "Ana Ruiz", ' \
       'token: (nonce) => fetch("/deacon/token", { method: "POST", credentials: "same-origin", ' \
       'headers: { "Content-Type": "application/json", "X-CSRF-Token": "CSRF" }, ' \
       'body: JSON.stringify({ nonce }) }).then((r) => (r.status === 200 ? r.text() : "")) }; ' \
       "window.Deacon?.identify(window.deaconUser);</script>" \
       '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
-      without_csrf_token(rendered_tag("/account"))
+      without_per_render_values(rendered_tag("/account"))
     )
   end
 
   test "signs the visitor out of Deacon when nobody is signed in" do
     assert_equal(
-      "<script>window.deaconUser = null; window.Deacon?.identify(null);</script>" \
+      '<script data-deacon-render="RENDER">window.deaconUser = null; window.Deacon?.identify(null);</script>' \
       '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
-      rendered_tag("/account")
+      without_per_render_values(rendered_tag("/account"))
     )
   end
 
@@ -93,12 +94,22 @@ class SignedInTest < DeaconTest
     )
   end
 
+  # Turbo Drive keeps the head and runs a script in the new page's head only when none just like
+  # it is there, so a sign-out after a sign-in after a sign-out would otherwise never run.
+  test "makes each page's signed-in script unlike the last, so Turbo Drive runs it on every visit" do
+    first = Nokogiri::HTML5.fragment(rendered_tag("/account")).at_css("script").to_html
+    second = Nokogiri::HTML5.fragment(rendered_tag("/account")).at_css("script").to_html
+
+    refute_equal first, second
+  end
+
   test "carries the Content Security Policy nonce on the signed-in script too" do
     assert_equal(
-      '<script nonce="n0nce">window.deaconUser = null; window.Deacon?.identify(null);</script>' \
+      '<script data-deacon-render="RENDER" nonce="n0nce">window.deaconUser = null; ' \
+      "window.Deacon?.identify(null);</script>" \
       '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async ' \
       'nonce="n0nce"></script>',
-      rendered_tag("/account-with-nonce")
+      without_per_render_values(rendered_tag("/account-with-nonce"))
     )
   end
 

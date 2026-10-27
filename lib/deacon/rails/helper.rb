@@ -1,5 +1,6 @@
 require "erb"
 require "json"
+require "securerandom"
 
 module Deacon
   module Rails
@@ -74,10 +75,13 @@ module Deacon
         "{ #{hash.map { |name, value| "#{deacon_js(name)}: #{deacon_js(value)}" }.join(', ')} }"
       end
 
+      # Turbo Drive keeps the head between visits and runs a script in the new page's head only
+      # when none just like it is there, so each page's is made unlike the last one's. Otherwise a
+      # sign-in or sign-out back to someone the head has seen before would never reach Deacon.
       def deacon_script(code, nonce)
         nonce_attribute = nonce.nil? ? "" : %( nonce="#{ERB::Util.html_escape(nonce)}")
 
-        "<script#{nonce_attribute}>#{code}</script>"
+        %(<script data-deacon-render="#{SecureRandom.hex(8)}"#{nonce_attribute}>#{code}</script>)
       end
 
       def deacon_config
