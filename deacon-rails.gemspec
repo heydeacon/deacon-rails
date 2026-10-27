@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email = ["hello@heydeacon.com"]
 
   spec.summary = "Adds Deacon, an AI support chat that answers from your docs, to every page of a Rails app."
-  spec.description = "A view helper, deacon_widget_tag, that puts the Deacon chat widget on every page of a Rails app from one line in the layout. Deacon is an AI support agent that answers questions from your own docs and content, and says when it doesn't know."
+  spec.description = "A view helper, deacon_widget_tag, that puts the Deacon chat widget on every page of a Rails app from one line in the layout, and tells Deacon who is signed in, with a token route that signs them with your secret so Deacon can trust it. Deacon is an AI support agent that answers questions from your own docs and content, and says when it doesn't know."
   spec.homepage = "https://heydeacon.com"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.3"
