@@ -16,6 +16,9 @@ module Deacon
                        "signed in. It starts with dk_sec_.".freeze
 
       def create
+        # A token names one person, so no cache in front of the app may keep it for another.
+        response.headers["Cache-Control"] = "no-store, private"
+
         user = CurrentUser.find(self)
         return head(:no_content) unless user.is_a?(CurrentUser::Details)
 

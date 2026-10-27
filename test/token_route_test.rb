@@ -80,4 +80,17 @@ class TokenRouteTest < DeaconTest
       )
     end
   end
+
+  # Rails writes the two directives in its own order, which means the same to a cache.
+  { "a token" => "ana", "no token" => nil }.each do |answer, user|
+    test "tells caches never to keep #{answer}" do
+      cookies[:user] = "ana"
+      csrf = csrf_token_in(rendered_tag("/account"))
+      cookies.delete("user") if user.nil?
+
+      post_token(csrf)
+
+      assert_equal %w[no-store private], response.headers["Cache-Control"].split(", ").sort
+    end
+  end
 end
