@@ -48,6 +48,21 @@ class TokenRouteTest < DeaconTest
     end
   end
 
+  test "signs whoever config.deacon.current_user finds, with only the details they have" do
+    Rails.application.config.deacon.current_user = -> { Current.user if authenticated? }
+    cookies[:session_id] = "s1"
+
+    travel_to Time.utc(2026, 10, 27, 12) do
+      ask_for_token
+      payload, = JWT.decode(response.body, SECRET, true, algorithm: "HS256")
+
+      assert_equal(
+        { "sub" => "21", "email" => "cy@studio.com", "nonce" => NONCE, "iat" => 1_793_102_400, "exp" => 1_793_103_000 },
+        payload
+      )
+    end
+  end
+
   test "answers 204 with no token when nobody is signed in" do
     cookies[:user] = "ana"
     csrf = csrf_token_in(rendered_tag("/account"))

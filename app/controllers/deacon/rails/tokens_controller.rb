@@ -38,7 +38,7 @@ module Deacon
         end
 
         now = Time.now.to_i
-        claims = { sub: user.id, email: user.email, name: user.name, nonce: nonce, iat: now, exp: now + LIFETIME }
+        claims = { sub: user.id, email: user.email, name: user.name, nonce: nonce, iat: now, exp: now + LIFETIME }.compact
 
         render plain: JWT.encode(claims, secret, "HS256")
       end
