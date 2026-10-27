@@ -45,10 +45,10 @@ When you run `bin/rails server`, Install notices the widget on `localhost:3000` 
 When someone is signed in to your app, the tag tells Deacon their id, email and name, so their conversations show who they are. To have Deacon trust that, rather than take the page's word for it, give the gem your secret in the `DEACON_SECRET` environment variable:
 
 ```sh
-DEACON_SECRET=dk_sec_your_secret
+DEACON_SECRET=deacon_identity_your_secret
 ```
 
-To make one, open Install in Deacon and use Make a secret under Verify who's signed in. You see it once. The key the gem signs with is the whole string exactly as Install shows it, `dk_sec_` and all, not decoded or shortened. Keep it on the server: unlike the `pk_` key, anyone who has it can tell Deacon they are any of your users.
+To make one, open Install in Deacon and use Make a secret under Verify who's signed in. You see it once. The key the gem signs with is the whole string exactly as Install shows it, `deacon_identity_` and all, not decoded or shortened. Keep it on the server: unlike the `pk_` key, anyone who has it can tell Deacon they are any of your users.
 
 With the secret set, the gem does the rest:
 

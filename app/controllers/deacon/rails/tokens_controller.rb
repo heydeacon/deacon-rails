@@ -17,7 +17,7 @@ module Deacon
       MISSING_SECRET = "deacon-rails: DEACON_SECRET is missing, so the token route signs nobody " \
                        "and Deacon can't verify who is signed in. In Deacon, open Install (the " \
                        "button at the top of the dashboard) and make a secret under Verify who's " \
-                       "signed in. It starts with dk_sec_.".freeze
+                       "signed in. It starts with deacon_identity_.".freeze
 
       # The route answers for nobody signed in itself, with a 204, so the app's sign-in gates must
       # not send that request to a sign-in page: Rails 8's built-in authentication's and Devise's.
@@ -33,7 +33,7 @@ module Deacon
         user = CurrentUser.find(self)
         return head(:no_content) unless user.is_a?(CurrentUser::Details)
 
-        # The key is the whole secret as Deacon showed it, dk_sec_ and all.
+        # The key is the whole secret as Deacon showed it, deacon_identity_ and all.
         secret = ENV["DEACON_SECRET"].to_s.strip
 
         if secret.empty?

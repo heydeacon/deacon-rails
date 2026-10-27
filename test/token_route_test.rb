@@ -1,7 +1,7 @@
 require "test_helper"
 
 class TokenRouteTest < DeaconTest
-  SECRET = "dk_sec_Wf3pX9qLr2Tz8vNc4bJh6yKd1sMa7eGu0oPiQwErTyU".freeze
+  SECRET = "deacon_identity_UpMp160sf5EZppi3gLssUsQCcbKrAxq3EdekLOyZ9OU1QX5bY".freeze
 
   # A widget session's nonce, as Deacon makes them: an HMAC-SHA256 in hex.
   NONCE = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08".freeze
@@ -77,7 +77,7 @@ class TokenRouteTest < DeaconTest
   MISSING_SECRET = "deacon-rails: DEACON_SECRET is missing, so the token route signs nobody " \
                    "and Deacon can't verify who is signed in. In Deacon, open Install (the button " \
                    "at the top of the dashboard) and make a secret under Verify who's signed in. " \
-                   "It starts with dk_sec_."
+                   "It starts with deacon_identity_."
 
   {
     "unset" => nil,
