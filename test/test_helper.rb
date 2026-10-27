@@ -51,7 +51,19 @@ class ApplicationController < ActionController::Base
 
   protect_from_forgery with: :exception
 
+  # Sign-in gates by the names Rails 8's built-in authentication and Devise give them, which send
+  # anyone else to a sign-in page. Pages that show the widget to everyone skip them.
+  before_action :require_authentication, :authenticate_user!
+
   private
+
+  def require_authentication
+    redirect_to "/session/new" unless authenticated?
+  end
+
+  def authenticate_user!
+    redirect_to "/users/sign_in" unless current_user
+  end
 
   def current_user
     USERS[cookies[:user]]
@@ -70,6 +82,8 @@ end
 
 # A page in the app that has someone signed in, or nobody.
 class AccountPagesController < ApplicationController
+  skip_before_action :require_authentication, :authenticate_user!
+
   def show
     render inline: "<%= deacon_widget_tag %>"
   end

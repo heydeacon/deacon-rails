@@ -19,6 +19,10 @@ module Deacon
                        "button at the top of the dashboard) and make a secret under Verify who's " \
                        "signed in. It starts with dk_sec_.".freeze
 
+      # The route answers for nobody signed in itself, with a 204, so the app's sign-in gates must
+      # not send that request to a sign-in page: Rails 8's built-in authentication's and Devise's.
+      skip_before_action :require_authentication, :authenticate_user!, raise: false
+
       def create
         # A token names one person, so no cache in front of the app may keep it for another.
         response.headers["Cache-Control"] = "no-store, private"
