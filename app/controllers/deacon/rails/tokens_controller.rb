@@ -12,6 +12,8 @@ module Deacon
 
       def create
         user = CurrentUser.find(self)
+        return head(:no_content) unless user.is_a?(CurrentUser::Details)
+
         nonce = request.request_parameters["nonce"]
         now = Time.now.to_i
         claims = { sub: user.id, email: user.email, name: user.name, nonce: nonce, iat: now, exp: now + LIFETIME }

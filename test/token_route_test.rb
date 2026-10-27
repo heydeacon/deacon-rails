@@ -13,8 +13,10 @@ class TokenRouteTest < DeaconTest
 
   # What the page's token function sends: the JSON body, with the CSRF token the page printed.
   def ask_for_token(body: JSON.generate(nonce: NONCE))
-    csrf = csrf_token_in(rendered_tag("/account"))
+    post_token(csrf_token_in(rendered_tag("/account")), body: body)
+  end
 
+  def post_token(csrf, body: JSON.generate(nonce: NONCE))
     post "/deacon/token",
          params: body,
          headers: { "Content-Type" => "application/json", "X-CSRF-Token" => csrf }
@@ -44,5 +46,15 @@ class TokenRouteTest < DeaconTest
         [response.status, response.media_type, header["alg"], payload]
       )
     end
+  end
+
+  test "answers 204 with no token when nobody is signed in" do
+    cookies[:user] = "ana"
+    csrf = csrf_token_in(rendered_tag("/account"))
+    cookies.delete("user") # signed out since the page loaded
+
+    post_token(csrf)
+
+    assert_equal [204, ""], [response.status, response.body]
   end
 end
