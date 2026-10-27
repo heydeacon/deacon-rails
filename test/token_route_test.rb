@@ -101,4 +101,15 @@ class TokenRouteTest < DeaconTest
 
     assert_equal [200, []], [response.status, response.headers.keys.grep(/\Aaccess-control-/i)]
   end
+
+  test "refuses a request without the page's CSRF token, as the app refuses any POST" do
+    cookies[:user] = "ana"
+    rendered_tag("/account")
+
+    assert_raises(ActionController::InvalidAuthenticityToken) do
+      post "/deacon/token",
+           params: JSON.generate(nonce: NONCE),
+           headers: { "Content-Type" => "application/json" }
+    end
+  end
 end
