@@ -27,6 +27,36 @@ class SignedInTest < DeaconTest
     )
   end
 
+  # The id, email and name the page tells Deacon, as written in the script.
+  def user_fields(html)
+    html[/window\.deaconUser = \{ (.*?), token: /, 1]
+  end
+
+  test "finds the user with config.deacon.current_user as a method name" do
+    Rails.application.config.deacon.current_user = :current_member
+    cookies[:member] = "bo"
+
+    assert_equal 'id: "12", email: "bo@studio.com", name: "Bo Chen"', user_fields(rendered_tag("/account"))
+  end
+
+  test "finds a Rails 8 built-in authentication user with config.deacon.current_user as a lambda" do
+    Rails.application.config.deacon.current_user = -> { Current.user if authenticated? }
+    cookies[:session_id] = "s1"
+
+    assert_equal 'id: "21", email: "cy@studio.com"', user_fields(rendered_tag("/account"))
+  end
+
+  test "refuses a current_user that isn't a method name or a lambda" do
+    Rails.application.config.deacon.current_user = 42
+
+    error = assert_raises(ActionView::Template::Error) { get "/account" }
+
+    assert_equal(
+      [ArgumentError, "deacon-rails: config.deacon.current_user must be a method name or a lambda."],
+      [error.cause.class, error.cause.message]
+    )
+  end
+
   { "someone" => "ana", "nobody" => nil }.each do |description, user|
     test "says nothing about who is signed in when config.deacon.signed_in is false, with #{description} signed in" do
       Rails.application.config.deacon.signed_in = false

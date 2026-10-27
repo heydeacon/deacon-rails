@@ -34,10 +34,20 @@ end
 # Someone the dummy app can sign in, in Devise's shape: an id, an email and a name.
 User = Struct.new(:id, :email, :name)
 
+# Someone signed in with Rails 8's built-in authentication, whose User has an email_address.
+BuiltInUser = Struct.new(:id, :email_address)
+
+# Where Rails 8's built-in authentication keeps who is signed in.
+class Current < ActiveSupport::CurrentAttributes
+  attribute :user
+end
+
 # The dummy app's own controller, which signs in whoever the user cookie names, as a Devise
 # app's current_user does, and checks the CSRF token on every POST, as a new Rails app does.
 class ApplicationController < ActionController::Base
   USERS = { "ana" => User.new(7, "ana@studio.com", "Ana Ruiz") }.freeze
+  MEMBERS = { "bo" => User.new(12, "bo@studio.com", "Bo Chen") }.freeze
+  BUILT_IN_USERS = { "s1" => BuiltInUser.new(21, "cy@studio.com") }.freeze
 
   protect_from_forgery with: :exception
 
@@ -45,6 +55,16 @@ class ApplicationController < ActionController::Base
 
   def current_user
     USERS[cookies[:user]]
+  end
+
+  # A second kind of user, as an app with two Devise models has.
+  def current_member
+    MEMBERS[cookies[:member]]
+  end
+
+  # As Rails 8's built-in authentication does: resume the session cookie's user into Current.
+  def authenticated?
+    Current.user ||= BUILT_IN_USERS[cookies[:session_id]]
   end
 end
 
