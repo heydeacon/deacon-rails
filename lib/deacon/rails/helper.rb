@@ -40,10 +40,13 @@ module Deacon
 
       # Who is signed in, for the loader to read as it starts, so it goes above the loader tag.
       # The token function asks the app's own POST /deacon/token to sign them when the chat
-      # opens, sending the CSRF token as every other POST in the app does.
+      # opens, sending the CSRF token as every other POST in the app does. With nobody signed
+      # in it signs the visitor out, so a sign-out ends Deacon's proof of who they were. An app
+      # with no way to say who is signed in gets neither.
       def deacon_signed_in_script(nonce)
         user = CurrentUser.find(controller)
-        return unless user.is_a?(CurrentUser::Details)
+        return if user == :unknown
+        return deacon_script("window.deaconUser = null; window.Deacon?.identify(null);", nonce) if user.nil?
 
         fields = { id: user.id, email: user.email, name: user.name }.compact
         headers = { "Content-Type" => "application/json" }

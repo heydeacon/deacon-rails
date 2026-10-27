@@ -18,4 +18,19 @@ class SignedInTest < DeaconTest
       without_csrf_token(rendered_tag("/account"))
     )
   end
+
+  test "signs the visitor out of Deacon when nobody is signed in" do
+    assert_equal(
+      "<script>window.deaconUser = null; window.Deacon?.identify(null);</script>" \
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
+      rendered_tag("/account")
+    )
+  end
+
+  test "says nothing about who is signed in when the app has no current_user" do
+    assert_equal(
+      '<script src="https://heydeacon.com/widget/v1/loader.js" data-key="pk_test123" async></script>',
+      rendered_tag("/")
+    )
+  end
 end
