@@ -57,4 +57,27 @@ class TokenRouteTest < DeaconTest
 
     assert_equal [204, ""], [response.status, response.body]
   end
+
+  MISSING_SECRET = "deacon-rails: DEACON_SECRET is missing, so the token route signs nobody " \
+                   "and Deacon can't verify who is signed in. In Deacon, open Install (the button " \
+                   "at the top of the dashboard) and make a secret under Verify who's signed in. " \
+                   "It starts with dk_sec_."
+
+  {
+    "unset" => nil,
+    "empty" => "",
+    "blank" => "   "
+  }.each do |description, secret|
+    test "answers 204 and logs a warning when DEACON_SECRET is #{description}" do
+      ENV["DEACON_SECRET"] = secret
+      cookies[:user] = "ana"
+
+      ask_for_token
+
+      assert_equal(
+        [204, "", ["#{MISSING_SECRET}\n"]],
+        [response.status, response.body, logged.lines.grep(/deacon-rails/)]
+      )
+    end
+  end
 end
