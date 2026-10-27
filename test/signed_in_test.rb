@@ -80,6 +80,19 @@ class SignedInTest < DeaconTest
     )
   end
 
+  test "keeps a name that looks like HTML inside the script, as it was written" do
+    cookies[:user] = "dee"
+
+    # The script as a browser reads it, which a </script> in the name would cut short.
+    script = Nokogiri::HTML5.fragment(rendered_tag("/account")).at_css("script").text
+    name = script[/name: ("(?:[^"\\]|\\.)*")/, 1]
+
+    assert_equal(
+      ['</script><b>"hi" &amp;</b>', true],
+      [name && JSON.parse(name), script.end_with?("window.Deacon?.identify(window.deaconUser);")]
+    )
+  end
+
   test "carries the Content Security Policy nonce on the signed-in script too" do
     assert_equal(
       '<script nonce="n0nce">window.deaconUser = null; window.Deacon?.identify(null);</script>' \

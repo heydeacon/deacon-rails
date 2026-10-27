@@ -46,7 +46,10 @@ end
 # The dummy app's own controller, which signs in whoever the user cookie names, as a Devise
 # app's current_user does, and checks the CSRF token on every POST, as a new Rails app does.
 class ApplicationController < ActionController::Base
-  USERS = { "ana" => User.new(7, "ana@studio.com", "Ana Ruiz") }.freeze
+  USERS = {
+    "ana" => User.new(7, "ana@studio.com", "Ana Ruiz"),
+    "dee" => User.new(8, "dee@studio.com", '</script><b>"hi" &amp;</b>')
+  }.freeze
   MEMBERS = { "bo" => User.new(12, "bo@studio.com", "Bo Chen") }.freeze
   BUILT_IN_USERS = { "s1" => BuiltInUser.new(21, "cy@studio.com") }.freeze
 
