@@ -51,19 +51,33 @@ module Deacon
       def deacon_signed_in_script(nonce)
         user = CurrentUser.find(controller)
         return if user == :unknown
-        return deacon_script("window.deaconUser = null; window.Deacon?.identify(null);", nonce) if user.nil?
 
-        fields = { id: user.id, email: user.email, name: user.name }.compact
+        code = if user.nil?
+                 "window.deaconUser = null; window.Deacon?.identify(null);"
+               else
+                 "window.deaconUser = #{deacon_user_object(user)}; " \
+                   "window.Deacon?.identify(window.deaconUser);"
+               end
+
+        deacon_script(code, nonce)
+      end
+
+      # The user's id, email and name, and the token function: written as code rather than
+      # JSON, since a function has no JSON.
+      def deacon_user_object(user)
         headers = { "Content-Type" => "application/json" }
         headers["X-CSRF-Token"] = form_authenticity_token if protect_against_forgery?
+        path = ::Rails.application.routes.url_helpers.deacon_token_path
 
-        token = "(nonce) => fetch(#{deacon_js(::Rails.application.routes.url_helpers.deacon_token_path)}, " \
-                '{ method: "POST", credentials: "same-origin", ' \
-                "headers: #{deacon_js_object(headers)}, body: JSON.stringify({ nonce }) })" \
+        token = "(nonce) => fetch(#{deacon_js(path)}, { method: \"POST\", " \
+                "credentials: \"same-origin\", headers: #{deacon_js_object(headers)}, " \
+                "body: JSON.stringify({ nonce }) })" \
                 '.then((r) => (r.status === 200 ? r.text() : ""))'
-        user_object = (fields.map { |name, value| "#{name}: #{deacon_js(value)}" } << "token: #{token}").join(", ")
 
-        deacon_script("window.deaconUser = { #{user_object} }; window.Deacon?.identify(window.deaconUser);", nonce)
+        fields = { id: user.id, email: user.email, name: user.name }.compact
+        fields = fields.map { |name, value| "#{name}: #{deacon_js(value)}" }
+
+        "{ #{[*fields, "token: #{token}"].join(', ')} }"
       end
 
       # A string as JavaScript, escaped so nothing in it can end the script it sits in.

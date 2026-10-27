@@ -59,7 +59,7 @@ class SignedInTest < DeaconTest
   end
 
   { "someone" => "ana", "nobody" => nil }.each do |description, user|
-    test "says nothing about who is signed in when config.deacon.signed_in is false, with #{description} signed in" do
+    test "says nothing about who is signed in with signed_in false and #{description} signed in" do
       Rails.application.config.deacon.signed_in = false
       cookies[:user] = user unless user.nil?
 

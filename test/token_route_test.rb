@@ -57,7 +57,8 @@ class TokenRouteTest < DeaconTest
       payload, = JWT.decode(response.body, SECRET, true, algorithm: "HS256")
 
       assert_equal(
-        { "sub" => "21", "email" => "cy@studio.com", "nonce" => NONCE, "iat" => 1_793_102_400, "exp" => 1_793_103_000 },
+        { "sub" => "21", "email" => "cy@studio.com", "nonce" => NONCE,
+          "iat" => 1_793_102_400, "exp" => 1_793_103_000 },
         payload
       )
     end

@@ -17,7 +17,9 @@ module Deacon
         user = case lookup
                when Proc then controller.instance_exec(&lookup)
                when Symbol, String then controller.send(lookup)
-               else raise ArgumentError, "deacon-rails: config.deacon.current_user must be a method name or a lambda."
+               else
+                 raise ArgumentError, "deacon-rails: config.deacon.current_user must be a method " \
+                                      "name or a lambda."
                end
 
         details(user) if user
@@ -25,7 +27,9 @@ module Deacon
 
       # Rails 8's built-in authentication names the address email_address.
       def self.details(user)
-        email = user.respond_to?(:email) ? user.email : (user.email_address if user.respond_to?(:email_address))
+        email = if user.respond_to?(:email) then user.email
+                elsif user.respond_to?(:email_address) then user.email_address
+                end
         name = user.name if user.respond_to?(:name)
 
         Details.new(user.id.to_s, email.to_s.presence, name.to_s.presence)
